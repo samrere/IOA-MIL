@@ -54,8 +54,6 @@ class Attention_instance_loss(nn.Module):
         self.feature_extractor = Feature_extractor()
         self.attention = nn.Linear(512, 1)
         self.fc = nn.Linear(512, 1)
-        # nn.init.zeros_(self.fc.weight)
-        # nn.init.zeros_(self.fc.bias)
         
     def forward(self, x, criterion=None,labels=None):
         D = x.shape[1]
@@ -63,14 +61,14 @@ class Attention_instance_loss(nn.Module):
         raw = self.attention(x)# D,1
         raw = torch.transpose(raw, 1, 0)# 1,D
         
-        # prob = torch.tanh(raw)# 1,D
-        A = F.softmax(raw, dim=1)# 1,D
+        prob = 5*torch.tanh(raw/5)# 1,D
+        A = F.softmax(prob, dim=1)# 1,D
         M = A @ x # 1,D @ D,512->1,512
 
-        # M = M.detach()
+        M = M.detach()
         skip = self.fc(M)
         x = self.attention(M)
-        # x = x.detach()
+        x = x.detach()
         x = x + skip
         x = x.squeeze(-1)# 1,
         L1 = criterion(x, labels).mean()
